@@ -116,6 +116,13 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
+-- Keymaps for Python and SQL
+vim.keymap.set('n', '<leader>rp', ':w<CR>:!tmux new-window -n python "python3 %:p"<CR>', { desc = 'Run Python in tmux window' })
+vim.keymap.set('n', '<leader>rt', ':w<CR>:ToggleTerm direction=horizontal python3 %:p<CR>', { desc = 'Run Python in toggleterm' })
+vim.keymap.set('n', '<leader>rs', ':%DB<CR>', { desc = 'Run SQL file with Dadbod' })
+vim.keymap.set('v', '<leader>rs', ':DB<CR>', { desc = 'Run selected SQL with Dadbod' })
+vim.keymap.set('n', '<leader>rd', ':DBUI<CR>', { desc = 'Open Dadbod UI' })
+
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
 --  See `:help vim.highlight.on_yank()`
@@ -153,6 +160,68 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+
+-- Add custom Neo-tree config if needed (optional override)
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons',
+      'MunifTanjim/nui.nvim',
+    },
+    config = function()
+      require('neo-tree').setup {
+        close_if_last_window = true,
+        window = {
+          width = 30,
+        },
+        filesystem = {
+          hijack_netrw_behavior = 'open_default',
+          follow_current_file = { enabled = true },
+        },
+        event_handlers = {
+          {
+            event = 'file_opened',
+            handler = function()
+              require('neo-tree.command').execute({ action = 'close' })
+            end,
+          },
+        },
+      }
+    end,
+  },
+  -- SQL support with vim-dadbod
+  {
+    'tpope/vim-dadbod',
+    dependencies = {
+      'kristijanhusak/vim-dadbod-ui', -- UI for browsing DBs
+      'kristijanhusak/vim-dadbod-completion', -- SQL completion
+    },
+    config = function()
+      -- Optional: Set your DB connection (e.g., SQLite)
+      vim.g.db = 'sqlite:///home/neno/mydb.sqlite'
+      -- Example for PostgreSQL: 'postgresql://user:password@localhost/dbname'
+    end,
+  },
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    config = function()
+      require('toggleterm').setup {
+        size = 20,
+        open_mapping = [[<c-\>]],
+        direction = 'horizontal',
+      }
+    end,
+  },
+  {
+    'vim-python/python-syntax', -- Fixed here
+    ft = 'python',
+    config = function()
+      vim.g.python_highlight_all = 1
+    end,
+  },
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
