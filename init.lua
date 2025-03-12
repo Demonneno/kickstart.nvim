@@ -117,7 +117,13 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 --  See `:help lua-guide-autocommands`
 
 -- Keymaps for Python and SQL
-vim.keymap.set('n', '<leader>rp', ':w<CR>:!tmux new-window -n python "python3 %:p"<CR>', { desc = 'Run Python in tmux window' })
+vim.keymap.set('n', '<leader>rp', function()
+  vim.cmd 'w' -- Save the file
+  local file = vim.fn.expand '%:p' -- Get full path of current file
+  local tmux_cmd = string.format('tmux new-window -n python "python3 %s"', file)
+  vim.fn.system(tmux_cmd) -- Execute tmux command
+end, { desc = 'Run Python in tmux window' })
+
 vim.keymap.set('n', '<leader>rt', ':w<CR>:ToggleTerm direction=horizontal python3 %:p<CR>', { desc = 'Run Python in toggleterm' })
 vim.keymap.set('n', '<leader>rs', ':%DB<CR>', { desc = 'Run SQL file with Dadbod' })
 vim.keymap.set('v', '<leader>rs', ':DB<CR>', { desc = 'Run selected SQL with Dadbod' })
@@ -161,7 +167,7 @@ require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
--- Add custom Neo-tree config if needed (optional override)
+  -- Add custom Neo-tree config if needed (optional override)
   {
     'nvim-neo-tree/neo-tree.nvim',
     branch = 'v3.x',
@@ -184,7 +190,7 @@ require('lazy').setup({
           {
             event = 'file_opened',
             handler = function()
-              require('neo-tree.command').execute({ action = 'close' })
+              require('neo-tree.command').execute { action = 'close' }
             end,
           },
         },
@@ -200,7 +206,7 @@ require('lazy').setup({
     },
     config = function()
       -- Optional: Set your DB connection (e.g., SQLite)
-      vim.g.db = 'sqlite:///home/neno/mydb.sqlite'
+      -- vim.g.db = 'sqlite:///home/neno/mydb.sqlite'
       -- Example for PostgreSQL: 'postgresql://user:password@localhost/dbname'
     end,
   },
@@ -755,7 +761,7 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'isort', 'black' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -969,7 +975,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'python', 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -998,10 +1004,10 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
