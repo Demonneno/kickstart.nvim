@@ -32,7 +32,7 @@ vim.opt.relativenumber = true
 vim.opt.mouse = 'a'
 
 -- Don't show the mode, since it's already in the status line
-vim.opt.showmode = true
+vim.opt.showmode = false
 
 -- Sync clipboard between OS and Neovim.
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
@@ -116,19 +116,6 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
--- Keymaps for Python and SQL
-vim.keymap.set('n', '<leader>rp', function()
-  vim.cmd 'w' -- Save the file
-  local file = vim.fn.expand '%:p' -- Get full path of current file
-  local tmux_cmd = string.format('tmux new-window -n python "python3 %s"', file)
-  vim.fn.system(tmux_cmd) -- Execute tmux command
-end, { desc = 'Run Python in tmux window' })
-
-vim.keymap.set('n', '<leader>rt', ':w<CR>:ToggleTerm direction=horizontal python3 %:p<CR>', { desc = 'Run Python in toggleterm' })
-vim.keymap.set('n', '<leader>rs', ':%DB<CR>', { desc = 'Run SQL file with Dadbod' })
-vim.keymap.set('v', '<leader>rs', ':DB<CR>', { desc = 'Run selected SQL with Dadbod' })
-vim.keymap.set('n', '<leader>rd', ':DBUI<CR>', { desc = 'Open Dadbod UI' })
-
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
 --  See `:help vim.highlight.on_yank()`
@@ -197,35 +184,26 @@ require('lazy').setup({
       }
     end,
   },
-  -- SQL support with vim-dadbod
+
   {
-    'tpope/vim-dadbod',
-    dependencies = {
-      'kristijanhusak/vim-dadbod-ui', -- UI for browsing DBs
-      'kristijanhusak/vim-dadbod-completion', -- SQL completion
-    },
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' }, -- Optional icons
     config = function()
-      -- Optional: Set your DB connection (e.g., SQLite)
-      -- vim.g.db = 'sqlite:///home/neno/mydb.sqlite'
-      -- Example for PostgreSQL: 'postgresql://user:password@localhost/dbname'
-    end,
-  },
-  {
-    'akinsho/toggleterm.nvim',
-    version = '*',
-    config = function()
-      require('toggleterm').setup {
-        size = 20,
-        open_mapping = [[<c-\>]],
-        direction = 'horizontal',
+      require('lualine').setup {
+        options = {
+          theme = 'material', -- Matches your colorscheme (e.g., tokyonight in kickstart)
+          section_separators = { left = '', right = '' },
+          component_separators = { left = '', right = '' },
+        },
+        sections = {
+          lualine_a = { 'mode' },
+          lualine_b = { 'branch', 'diff', 'diagnostics' },
+          lualine_c = { 'filename' },
+          lualine_x = { 'encoding', 'fileformat', 'filetype' },
+          lualine_y = { 'progress' },
+          lualine_z = { 'location' },
+        },
       }
-    end,
-  },
-  {
-    'vim-python/python-syntax', -- Fixed here
-    ft = 'python',
-    config = function()
-      vim.g.python_highlight_all = 1
     end,
   },
 
@@ -364,7 +342,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      -- { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -663,7 +641,8 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-      pyright = {},
+        pyright = {},
+        -- ruff-lsp = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -709,10 +688,8 @@ require('lazy').setup({
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-
-
       require('mason-lspconfig').setup {
-        ensure_installed = {} , -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
         automatic_installation = false,
         handlers = {
           function(server_name)
@@ -763,7 +740,7 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        python = { 'isort', 'black' },
+        --sython = { 'isort', 'black' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -844,7 +821,7 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<Tab>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -998,7 +975,11 @@ require('lazy').setup({
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
-
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+  },
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1010,7 +991,7 @@ require('lazy').setup({
   --
   require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
-  require 'kickstart.plugins.lint',
+  -- require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
@@ -1019,7 +1000,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
